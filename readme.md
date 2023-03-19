@@ -4,7 +4,7 @@
 
 - [x] Continue automatically.
 - [x] Save dialogs.
-- [ ] Regenerate answers.
+- [x] Regenerate answers.  
 More...
 
 ### MIT License
