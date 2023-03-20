@@ -160,6 +160,35 @@
         return "error";
     }
 
+    function getStates(){
+        let state = {
+            auto: false,
+            regenerate: false
+        }
+        let v = localStorage.getItem("cached:auto")
+        if (v!=null && v!=''){
+            if (v=='true'){
+                state.auto = true;
+            }
+        }
+        v = localStorage.getItem("cached:rege")
+        if (v!=null && v!=''){
+            if (v=='true' && state.auto==false){
+                state.regenerate = true;
+            }
+        }
+        return state;
+    }
+
+    function saveStates({
+        auto,
+        regenerate
+    }){
+        localStorage.setItem("cached:auto",auto?"true":"false");
+        localStorage.setItem("cached:rege",regenerate?"true":"false");
+        return true;
+    }
+
     function createGlobalButton({
         text,
         onclick,
@@ -188,10 +217,41 @@
         return autoDOM;
     }
 
+    function createGlobalInput({
+        placeholder,
+        onchange,
+        index,
+    }){
+        let dom = document.createElement("input")
+        dom.placeholder = placeholder
+        dom.onchange = (evt)=>{
+            if (onchange!=undefined && typeof onchange=="function")
+                onchange(dom,evt)
+        }
+        dom.style = `
+        position: fixed;
+        bottom: 5px;
+        right: ${index*105+5}px;
+        height: 35px;
+        font-size: 12px;
+        border-radius: 2px;
+        backdrop-filter: blur(2px);
+        width: 100px;
+        outline: none;
+        border: none;
+        z-index: 9999;
+        background: rgba(255,255,255,0.9);
+        box-shadow: 5px 5px 5px rgba(255,255,255,0.1);
+        color: black;
+        `
+        return dom;
+    }
+
     function createAutoButton() {
         let timer = undefined;
         let v = false;
         let cur_running = undefined;
+        let max_count = 20;
         let autoBtn = createGlobalButton({
             text:"Auto: OFF",
             onclick: (autoDOM) => {
@@ -243,11 +303,11 @@
             text:"Rege: OFF",
             onclick: (autoDOM)=>{
                 if (cur_running!=undefined && cur_running!="regenerate") return;
-                if (!v2 && count<20) {
+                if (!v2 && count<max_count) {
                     cur_running = "regenerate";
                     autoDOM.innerText = "Rege: ON";
                     timer2 = setInterval(async () => {
-                        if (count>=20){
+                        if (count>=max_count){
                             clearInterval(timer2);
                             autoDOM.click();
                             return;
@@ -286,6 +346,22 @@
             },
             index: 2
         })
+        let inputDOM = createGlobalInput({
+            placeholder:"20",
+            onchange:(dom,evt)=>{
+                try{
+                    let value = Number.parseInt(dom.value)
+                    if (value>0){
+                        max_count = value;
+                    }
+                    
+                }catch(e){
+                    console.error(e);
+                }
+            },
+            index: 3
+        })
+        document.body.appendChild(inputDOM);
         document.body.appendChild(autoBtn);
         document.body.appendChild(saveBtn);
         document.body.appendChild(regenerateBtn)
