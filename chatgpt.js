@@ -230,6 +230,7 @@
         }
         dom.style = `
         position: fixed;
+        padding: 5px;
         bottom: 5px;
         right: ${index*105+5}px;
         height: 35px;
@@ -252,34 +253,36 @@
         let v = false;
         let cur_running = undefined;
         let max_count = 20;
+        let autoRun = (autoDOM) => {
+            if (cur_running!=undefined && cur_running!="auto") return;
+            if (!v) {
+                cur_running = "auto";
+                autoDOM.innerText = "Auto: ON";
+                timer = setInterval(async () => {
+                    let status = checkStatus();
+                    console.log(`[${new Date().toLocaleString()}] check status: ${status}`);
+                    if (status == "finished") {
+                        sendText("继续");
+                    } else if (status == "error") {
+                        let [save,] = await editDialog(-2);
+                        if (save!=null){
+                            save.click();
+                        }
+                    }
+                }, 300);
+            } else {
+                if (timer != undefined) {
+                    clearInterval(timer);
+                }
+                autoDOM.innerText = "Auto: OFF";
+                cur_running = undefined;
+            }
+            v = !v;
+            saveStates({auto:v,regenerate:false})
+        }
         let autoBtn = createGlobalButton({
             text:"Auto: OFF",
-            onclick: (autoDOM) => {
-                if (cur_running!=undefined && cur_running!="auto") return;
-                if (!v) {
-                    cur_running = "auto";
-                    autoDOM.innerText = "Auto: ON";
-                    timer = setInterval(async () => {
-                        let status = checkStatus();
-                        console.log(`[${new Date().toLocaleString()}] check status: ${status}`);
-                        if (status == "finished") {
-                            sendText("继续");
-                        } else if (status == "error") {
-                            let [save,] = await editDialog(-2);
-                            if (save!=null){
-                                save.click();
-                            }
-                        }
-                    }, 300);
-                } else {
-                    if (timer != undefined) {
-                        clearInterval(timer);
-                    }
-                    autoDOM.innerText = "Auto: OFF";
-                    cur_running = undefined;
-                }
-                v = !v;
-            },
+            onclick: autoRun,
             index: 0
         })
         let saveBtn = createGlobalButton({
@@ -299,51 +302,56 @@
         let v2 = false;
         let timer2 = undefined;
         let count = 0;
+        let regenerateFunc = (autoDOM)=>{
+            if (cur_running!=undefined && cur_running!="regenerate") return;
+            if (!v2 && count<max_count) {
+                cur_running = "regenerate";
+                autoDOM.innerText = "Rege: ON";
+                timer2 = setInterval(async () => {
+                    if (count>=max_count){
+                        clearInterval(timer2);
+                        autoDOM.click();
+                        return;
+                    }
+                    let status = checkStatus();
+                    console.log(`[${new Date().toLocaleString()}] check status: ${status}`);
+                    if (status == "finished") {
+                        let [re,,] = getDialogInputField()
+                        if (re.innerText.indexOf("Regenerate")!=-1){
+                            let btn = re.querySelector("button")
+                            if (btn==undefined){
+                                ++count;
+                                re.click()
+                            }else{
+                                ++count;
+                                btn.click()
+                            }
+                        }
+                    } else if (status == "error") {
+                        let [save,] = await editDialog(-2);
+                        if (save!=null){
+                            ++count;
+                            save.click();
+                        }
+                    }
+                }, 300);
+            } else {
+                if (timer2 != undefined) {
+                    clearInterval(timer2);
+                }
+                count = 0;
+                autoDOM.innerText = "Rege: OFF";
+                cur_running = undefined;
+            }
+            v2 = !v2;
+            saveStates({
+                auto:false,
+                regenerate: v2
+            })
+        }
         let regenerateBtn = createGlobalButton({
             text:"Rege: OFF",
-            onclick: (autoDOM)=>{
-                if (cur_running!=undefined && cur_running!="regenerate") return;
-                if (!v2 && count<max_count) {
-                    cur_running = "regenerate";
-                    autoDOM.innerText = "Rege: ON";
-                    timer2 = setInterval(async () => {
-                        if (count>=max_count){
-                            clearInterval(timer2);
-                            autoDOM.click();
-                            return;
-                        }
-                        let status = checkStatus();
-                        console.log(`[${new Date().toLocaleString()}] check status: ${status}`);
-                        if (status == "finished") {
-                            let [re,,] = getDialogInputField()
-                            if (re.innerText.indexOf("Regenerate")!=-1){
-                                let btn = re.querySelector("button")
-                                if (btn==undefined){
-                                    ++count;
-                                    re.click()
-                                }else{
-                                    ++count;
-                                    btn.click()
-                                }
-                            }
-                        } else if (status == "error") {
-                            let [save,] = await editDialog(-2);
-                            if (save!=null){
-                                ++count;
-                                save.click();
-                            }
-                        }
-                    }, 300);
-                } else {
-                    if (timer2 != undefined) {
-                        clearInterval(timer2);
-                    }
-                    count = 0;
-                    autoDOM.innerText = "Rege: OFF";
-                    cur_running = undefined;
-                }
-                v2 = !v2;
-            },
+            onclick: regenerateFunc,
             index: 2
         })
         let inputDOM = createGlobalInput({
@@ -361,6 +369,13 @@
             },
             index: 3
         })
+        let state = getStates()
+        if (state.auto){
+            autoRun(autoBtn)
+        }
+        if (state.regenerate){
+            regenerateFunc(regenerateBtn)
+        }
         document.body.appendChild(inputDOM);
         document.body.appendChild(autoBtn);
         document.body.appendChild(saveBtn);
