@@ -247,6 +247,11 @@
                     cur_running = "regenerate";
                     autoDOM.innerText = "Rege: ON";
                     timer2 = setInterval(async () => {
+                        if (count>=20){
+                            clearInterval(timer2);
+                            autoDOM.click();
+                            return;
+                        }
                         let status = checkStatus();
                         console.log(`[${new Date().toLocaleString()}] check status: ${status}`);
                         if (status == "finished") {
