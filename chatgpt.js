@@ -238,11 +238,12 @@
         })
         let v2 = false;
         let timer2 = undefined;
+        let count = 0;
         let regenerateBtn = createGlobalButton({
             text:"Rege: OFF",
             onclick: (autoDOM)=>{
                 if (cur_running!=undefined && cur_running!="regenerate") return;
-                if (!v2) {
+                if (!v2 && count<20) {
                     cur_running = "regenerate";
                     autoDOM.innerText = "Rege: ON";
                     timer2 = setInterval(async () => {
@@ -253,14 +254,17 @@
                             if (re.innerText.indexOf("Regenerate")!=-1){
                                 let btn = re.querySelector("button")
                                 if (btn==undefined){
+                                    ++count;
                                     re.click()
                                 }else{
+                                    ++count;
                                     btn.click()
                                 }
                             }
                         } else if (status == "error") {
                             let [save,] = await editDialog(-2);
                             if (save!=null){
+                                ++count;
                                 save.click();
                             }
                         }
@@ -269,6 +273,7 @@
                     if (timer2 != undefined) {
                         clearInterval(timer2);
                     }
+                    count = 0;
                     autoDOM.innerText = "Rege: OFF";
                     cur_running = undefined;
                 }
