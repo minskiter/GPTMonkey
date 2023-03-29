@@ -362,7 +362,7 @@
                     if (value>0){
                         max_count = value;
                     }
-                    
+
                 }catch(e){
                     console.error(e);
                 }
@@ -382,9 +382,18 @@
         document.body.appendChild(regenerateBtn)
     }
     console.log("[ChatGPTBot] version: 0.1");
+    let loaded = false;
     window.onload = () => {
+        if (loaded) return;
         console.log("[ChatGPTBot] ready!");
         createAutoButton();
+        loaded = true;
         // something to do
     }
+    // load buttons after 100s if onload function failed
+    setTimeout(()=>{
+        if (loaded) return;
+        console.log("[ChatGPTBot] ready! document loaded timeout!")
+        loaded = true;
+    },100000)
 })();
