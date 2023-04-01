@@ -453,6 +453,7 @@
   // load buttons after 100s if onload function failed
   let t = setInterval(() => {
     if (loaded) {
+      clearInterval(t);
       return;
     }
     if (document.body === undefined || document.body === null) {
