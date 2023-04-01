@@ -181,7 +181,7 @@
 
     load() {
       let old = localStorage.getItem("cached:state");
-      if (old !== undefined) {
+      if (old !== undefined && old !== null) {
         old = JSON.parse(old);
         for (let key of Object.keys(this)) {
           if (key.startsWith("_")) continue;
